@@ -46,7 +46,7 @@ class TGPR_CV:
 
         # Default initial covariance
         if K0 is None:
-            K0 = jnp.diag(jnp.array([0.01, 0.01, 0.1, 0.1]))  # higher uncertainty on velocities
+            K0 = jnp.diag(jnp.array([0.01, 0.01, 0.1, 0.1]))
         self.K0 = K0
 
         # Default measurement noise
@@ -152,16 +152,16 @@ class TGPR_CV:
 
         # Update current state
         self._current_state = x_est[-1]
-        self.K0 = Sigma_post[-4:, -4:]
+        # self.K0 = Sigma_post[-4:, -4:]
 
         # Forward prediction
         x_future, K_future = self._predict(self._current_state, self.K0, dt, pred_horizon)
 
         # Include current state as first point
         self._x_traj = jnp.vstack([self._current_state[None, :], x_future])
-        self._k_traj = jnp.concatenate([self.K0[None, :, :], K_future], axis=0)
+        self._k_traj = jnp.concatenate([Sigma_post[-4:, -4:][None, :, :], K_future], axis=0)
 
-        return self._x_traj
+        return self._x_traj, self._k_traj
 
     def _estimate_initial_state(self, poses: jnp.ndarray, dt: float) -> jnp.ndarray:
         """
